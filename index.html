@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Find the Pattern Game</title>
+<style>
+body {
+    font-family: Arial;
+    background: #cfe8ff;
+    text-align: center;
+    overflow-x: hidden;
+    margin:0; padding:0;
+}
+.container { max-width: 900px; margin: auto; padding:20px; }
+
+h1 { font-size: 40px; margin-bottom: 5px;}
+#level { font-size: 24px; margin: 10px; }
+
+button {
+    padding: 12px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg,#ff9aa2,#ffdac1);
+    cursor: pointer;
+    font-size: 16px;
+}
+button:hover { transform: scale(1.05); }
+
+.progress {
+    height: 20px;
+    background: #ddd;
+    border-radius: 10px;
+    margin: 5px;
+}
+.bar {
+    height: 100%;
+    border-radius: 10px;
+}
+#playerBar { background:#4caf50; width:0%; }
+#bot1 { background:#ff6f61; width:0%; }
+#bot2 { background:#6a5acd; width:0%; }
+
+#timer { font-size: 22px; }
+
+#result { font-size: 40px; margin-top:20px; }
+
+canvas {
+    position: fixed;
+    top:0;
+    left:0;
+    pointer-events:none;
+}
+
+/* Stars */
+.star {
+    position: fixed;
+    color: gold;
+    animation: twinkle 1s linear infinite;
+}
+@keyframes twinkle {
+    0%{opacity:1;}
+    50%{opacity:0.2;}
+    100%{opacity:1;}
+}
+pre { text-align:left; display:inline-block; }
+</style>
+</head>
+
+<body>
+<canvas id="confetti"></canvas>
+
+<div class="container">
+<h1>Find the Pattern 🎯</h1>
+<div id="level"></div>
+<div id="timer"></div>
+
+<div>
+You<div class="progress"><div id="playerBar" class="bar"></div></div>
+Robot 1<div class="progress"><div id="bot1" class="bar"></div></div>
+Robot 2<div class="progress"><div id="bot2" class="bar"></div></div>
+</div>
+
+<h2 id="question"></h2>
+<div id="options"></div>
+
+<div id="result"></div>
+<button id="restart" onclick="startGame()" style="display:none;font-size:20px;">Play Again</button>
+</div>
+
+<script>
+// Questions
+let questions={
+1:[
+{q:"1, 3, 6, 10, 15 ____ , ____",o:["21,28","20,25","18,24","22,30"],a:0},
+{q:"1, 3, 5, 7, 9, ____, ____",o:["11,13","10,12","12,14","11,12"],a:0},
+{q:"2, 4, 6, 8, 10 …..",o:["Even numbers","Odd numbers","Squares","Primes"],a:0},
+{q:"A, C, E, G, ____, _____",o:["I,K","H,J","I,J","K,M"],a:0},
+{q:"V, X, ____",o:["Z","Y","A","W"],a:0}
+],
+2:[
+{q:"1, 2, 5, 16, 64….",o:["Multiply pattern","Squares","Add 1","Fibonacci"],a:0},
+{q:"1, 4, 10, 20, ___, ___",o:["35,56","30,50","34,55","36,60"],a:0},
+{q:"A, E, H, L, ___",o:["P","O","Q","R"],a:0},
+{q:"A,D,G,J ….",o:["+3 letters","+2 letters","+4 letters","Random"],a:0},
+{q:"Red, Yellow, Green, Blue, Orange, ____, ____",o:["Indigo,Violet","Pink,Black","White,Gray","Cyan,Magenta"],a:0}
+],
+3:[
+{q:"1, 2, 5, 16, 64….",o:["256","128","100","200"],a:0},
+{q:"A,G,N,___",o:["V","U","T","S"],a:0},
+{q:"Pattern in Pascal Triangle?",o:["Each number is sum of above two","Multiplication","Random","Squares"],a:0},
+{q:"AB, FG, KL, PQ ___, ___",o:["UV, ZA","TU, YZ","VW, XY","RS, TU"],a:0},
+{q:"1, 5, 15, 35, ___, ____",o:["70,126","60,100","80,140","75,130"],a:0}
+]
+};
+
+let level, qIndex, score, timer, timeLeft;
+let bot1Prog=0, bot2Prog=0;
+let botTimer;
+
+// Shuffle function
+function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+
+function startGame(){
+level=1; score=0;
+bot1Prog=0; bot2Prog=0;
+
+questions[1]=shuffle(questions[1]);
+questions[2]=shuffle(questions[2]);
+questions[3]=shuffle(questions[3]);
+
+document.getElementById("result").innerText="";
+document.getElementById("restart").style.display="none";
+
+startLevel();
+}
+
+function startLevel(){
+qIndex=0;
+timeLeft=900;
+document.getElementById("level").innerText="Level "+level;
+clearInterval(timer);
+clearInterval(botTimer);
+
+timer=setInterval(updateTimer,1000);
+
+// Robots start independently
+botTimer=setInterval(runBots,200);
+showQuestion();
+}
+
+function updateTimer(){
+timeLeft--;
+document.getElementById("timer").innerText="Time: "+timeLeft+"s";
+if(timeLeft<=0) lose();
+}
+
+// Robots move continuously
+function runBots(){
+let speedMultiplier = level * 0.4 + 0.8;
+bot1Prog += Math.random()*1.5*speedMultiplier;
+bot2Prog += Math.random()*1.8*speedMultiplier;
+
+updateBars();
+
+if(bot1Prog>=100 || bot2Prog>=100){
+lose();
+}
+}
+
+// Show Question with shuffled answers
+function showQuestion(){
+let q=questions[level][qIndex];
+document.getElementById("question").innerHTML=q.q;
+
+if(q.q.includes("Pascal")){
+document.getElementById("question").innerHTML+=
+"<pre>   1\n  1 1\n 1 2 1\n1 3 3 1</pre>";
+}
+
+let options = q.o.map((o,i)=>({text:o,index:i}));
+options = shuffle(options); // shuffle options
+
+let html="";
+options.forEach(opt=>{
+html+=`<button onclick="check(${opt.index})">${opt.text}</button>`;
+});
+document.getElementById("options").innerHTML=html;
+}
+
+function check(i){
+let q=questions[level][qIndex];
+if(i===q.a){
+confettiBurst();
+score++;
+qIndex++;
+
+if(qIndex>=5){
+level++;
+if(level>3){ win(); return;}
+startLevel();
+}else{
+updateBars();
+showQuestion();
+}
+}else lose();
+}
+
+function updateBars(){
+let playerWidth=(score/15)*100;
+document.getElementById("playerBar").style.width=playerWidth+"%";
+document.getElementById("bot1").style.width=bot1Prog+"%";
+document.getElementById("bot2").style.width=bot2Prog+"%";
+}
+
+// Confetti & Stars
+const canvas=document.getElementById("confetti");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let pieces=[];
+
+function confettiBurst(){
+for(let i=0;i<80;i++){
+pieces.push({
+x:Math.random()*canvas.width,
+y:0,
+size:Math.random()*8+4,
+speed:Math.random()*5+2,
+color:`hsl(${Math.random()*360},100%,50%)`
+});
+}
+spawnStars();
+}
+
+function spawnStars(){
+for(let i=0;i<20;i++){
+let star=document.createElement("div");
+star.className="star";
+star.innerText="✨";
+star.style.left=Math.random()*100+"%";
+star.style.top=Math.random()*100+"%";
+document.body.appendChild(star);
+setTimeout(()=>star.remove(),1000);
+}
+}
+
+function animate(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+pieces.forEach(p=>{
+ctx.fillStyle=p.color;
+ctx.fillRect(p.x,p.y,p.size,p.size);
+p.y+=p.speed;
+});
+requestAnimationFrame(animate);
+}
+animate();
+
+function win(){
+clearInterval(timer);
+clearInterval(botTimer);
+document.getElementById("result").innerText="You Win! 🎉";
+document.getElementById("restart").style.display="block";
+}
+
+function lose(){
+clearInterval(timer);
+clearInterval(botTimer);
+document.getElementById("result").innerText="Game Over 💀";
+document.getElementById("restart").style.display="block";
+}
+
+startGame();
+</script>
+</body>
+</html>
