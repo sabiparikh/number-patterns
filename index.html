@@ -81,7 +81,7 @@ function showQ(){levelDiv.innerText='Level '+(level+1);let q=levels[level][qInde
 
 const canvas=document.getElementById('confettiCanvas');const ctx=canvas.getContext('2d');canvas.width=innerWidth;canvas.height=innerHeight;let pieces=[];
 function createConfetti(){for(let i=0;i<150;i++)pieces.push({x:Math.random()*canvas.width,y:-20,vy:2+Math.random()*3,size:5+Math.random()*5});}
-function drawConfetti(){ctx.clearRect(0,0,canvas.width,canvas.height);pieces.forEach(p=>{ctx.fillRect(p.x,p.y,p.size,p.size);p.y+=p.vy;});pieces=pieces.filter(p=>p.y<canvas.height);}setInterval(drawConfetti,30);
+function drawConfetti(){ctx.clearRect(0,0,canvas.width,canvas.height);pieces.forEach(p=>{ctx.fillStyle=`hsl(${Math.random()*360},100%,60%)`;ctx.fillRect(p.x,p.y,p.size,p.size);p.y+=p.vy;});pieces=pieces.filter(p=>p.y<canvas.height);}setInterval(drawConfetti,30);
 
 function answer(i){if(gameOver)return;let q=levels[level][qIndex]; if(i!==q.a){lose();return;} createConfetti(); player+=100/(levels[level].length*3); qIndex++; if(qIndex>=levels[level].length){level++; qIndex=0; if(level>=3){win(); return;} startTimer();} showQ(); updateBars();}
 
