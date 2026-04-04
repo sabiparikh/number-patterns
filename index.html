@@ -2,19 +2,24 @@
 <html>
 <head>
 <meta charset='UTF-8'>
-<title>Pattern Champion</title>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Number Patterns</title>
 <style>
-body{background:black;color:white;font-family:Arial;text-align:center}
-button{background:white;color:black;border:none;padding:10px 20px;margin:8px;cursor:pointer}
+body{background:black;color:white;font-family:Arial;text-align:center;margin:0;padding:0}
+.container{max-width:600px;margin:auto;padding:20px}
+button{background:white;color:black;border:none;padding:14px 18px;margin:8px;width:90%;max-width:350px;font-size:18px;border-radius:8px}
 .hidden{display:none}
+img{max-width:90%;height:auto}
 </style>
 </head>
 <body>
+<div class='container'>
 <h1>Number Patterns</h1>
 <h2 id='levelTitle'></h2>
 <h3 id='timer'></h3>
 <div id='quiz'></div>
 <button id='playAgain' class='hidden' onclick='startGame()'>Play Again</button>
+</div>
 
 <script>
 const levels=[
@@ -42,7 +47,6 @@ const levels=[
 ];
 
 let levelIndex=0,qIndex=0,timeLeft=900,timer;
-
 function shuffle(arr){return arr.sort(()=>Math.random()-0.5)}
 
 function startGame(){levelIndex=0;document.getElementById('playAgain').classList.add('hidden');levels.forEach(l=>shuffle(l.questions));startLevel();}
@@ -52,8 +56,8 @@ function startLevel(){qIndex=0;timeLeft=900;document.getElementById('levelTitle'
 function updateTimer(){timeLeft--;document.getElementById('timer').innerText='Time: '+Math.floor(timeLeft/60)+':'+(timeLeft%60).toString().padStart(2,'0');if(timeLeft<=0)gameOver();}
 
 function showQuestion(){const q=levels[levelIndex].questions[qIndex];let html='<h2>'+q.q+'</h2>';
-if(q.img) html+="<img src='https://upload.wikimedia.org/wikipedia/commons/0/0d/PascalTriangleAnimated2.gif' width='250'><br>";
-q.opts.forEach((opt,i)=>{html+=`<button onclick='answer(${i})'>${opt}</button><br>`});
+if(q.img) html+="<img src='https://upload.wikimedia.org/wikipedia/commons/0/0d/PascalTriangleAnimated2.gif'><br>";
+q.opts.forEach((opt,i)=>{html+=`<button onclick='answer(${i})'>${opt}</button>`});
 document.getElementById('quiz').innerHTML=html;}
 
 function answer(i){const q=levels[levelIndex].questions[qIndex];if(i!==q.a){gameOver();return;}qIndex++;if(qIndex>=levels[levelIndex].questions.length){levelIndex++;clearInterval(timer);if(levelIndex>=levels.length){winGame();}else startLevel();}else showQuestion();}
