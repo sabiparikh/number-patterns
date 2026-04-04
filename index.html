@@ -2,91 +2,64 @@
 <html>
 <head>
 <meta charset='UTF-8'>
-<title>Find the Pattern Game</title>
+<title>Pattern Champion</title>
 <style>
-body{font-family:Arial;background:#cfefff;margin:0;text-align:center;overflow:hidden}
-.container{max-width:900px;margin:auto;padding:20px}
-button{padding:12px 22px;margin:8px;border:none;border-radius:14px;font-size:18px;background:linear-gradient(45deg,#ff8fab,#ffb3c6);color:white;cursor:pointer}
-button:hover{transform:scale(1.05)}
-.progress{height:22px;background:#eee;border-radius:20px;margin:10px}
-.bar{height:100%;background:linear-gradient(90deg,#6cd4ff,#4facfe);border-radius:20px;width:0%}
-#confettiCanvas{position:fixed;top:0;left:0;pointer-events:none}
-.level{font-size:30px;margin:10px;font-weight:bold}
-.skull{font-size:90px}
-.bigBtn{font-size:28px;padding:18px 30px}
+body{background:black;color:white;font-family:Arial;text-align:center}
+button{background:white;color:black;border:none;padding:10px 20px;margin:8px;cursor:pointer}
+.hidden{display:none}
 </style>
 </head>
 <body>
-<canvas id='confettiCanvas'></canvas>
-<div class='container'>
-<h1>Find the Pattern</h1>
-<div id='level' class='level'></div>
-<div>⏱ Time Left: <span id='timer'></span></div>
-<h2 id='question'></h2>
-<div id='options'></div>
-<h3>Progress Race</h3>
-You<div class='progress'><div id='playerBar' class='bar'></div></div>
-Robot 1<div class='progress'><div id='bot1' class='bar'></div></div>
-Robot 2<div class='progress'><div id='bot2' class='bar'></div></div>
-<div id='end'></div>
-</div>
-<script>
-const levelDiv=document.getElementById('level');
-const timer=document.getElementById('timer');
-const question=document.getElementById('question');
-const options=document.getElementById('options');
-const end=document.getElementById('end');
-const playerBar=document.getElementById('playerBar');
-const bot1Bar=document.getElementById('bot1');
-const bot2Bar=document.getElementById('bot2');
+<h1>Number Patterns</h1>
+<h2 id='levelTitle'></h2>
+<h3 id='timer'></h3>
+<div id='quiz'></div>
+<button id='playAgain' class='hidden' onclick='startGame()'>Play Again</button>
 
+<script>
 const levels=[
-[
-{q:'What are the next numbers in this pattern? 1, 3, 6, 10, 15 ____ , ____',o:['21,28','20,27','18,30','25,35'],a:0},
-{q:'What are the next numbers in this pattern? 1, 3, 5, 7, 9, ____, ____',o:['11,13','10,12','12,14','9,11'],a:0},
-{q:'What is the pattern? 2, 4, 6, 8, 10 …..',o:['Add 1','Add 2','Multiply by 2','Prime'],a:1},
-{q:'Which letter comes next? A, C, E, G, ____, _____',o:['H,I','I,K','J,L','K,M'],a:1},
-{q:'Which letter comes next? V, X, ____',o:['Y','Z','A','B'],a:1}
-],
-[
-{q:'What is the pattern? 1, 2, 5, 16, 64….',o:['Multiply by increasing integers','Add squares','Fibonacci','Prime'],a:0},
-{q:'Which numbers come next? 1, 4, 10, 20, ___, ___',o:['35,56','30,50','34,54','40,60'],a:0},
-{q:'Which letter comes next? A, E, H, L, ___',o:['O','P','Q','R'],a:0},
-{q:'What is the pattern? A,D,G,J ….',o:['+2 letters','+3 letters','+4 letters','Random'],a:1},
-{q:'What are the next colours in this pattern? Red, Yellow, Green, Blue, Orange, ____, ____',o:['Pink,Brown','Indigo,Violet','Black,White','Grey,Cyan'],a:1}
-],
-[
-{q:'Which number comes next in this pattern? 1, 2, 5, 16, 64….',o:['128','256','320','325'],a:3},
-{q:'What letter comes next in this pattern? A,G,N,___',o:['T','U','V','W'],a:2},
-{q:'What pattern can you see in this triangle? { Put a picture of the Pascal triangle here }',o:['Multiply rows','Add above numbers','Squares','Random'],a:1},
-{q:'What letters come next? AB, FG, KL, PQ ___, ___',o:['UV,ZA','TU,YZ','WX,AB','CD,EF'],a:0},
-{q:'What comes next? 1, 5, 15, 35, ___, ____',o:['60,90','70,126','65,120','80,140'],a:1}
-]
+{title:'Level 1 - Easy',questions:[
+{q:'What are the next numbers in this pattern? 1, 3, 6, 10, 15 ____, ____',opts:['21, 28','20, 25','18, 30','22, 27'],a:0},
+{q:'What are the next numbers in this pattern? 1, 3, 5, 7, 9, ____, ____',opts:['10,11','11,13','12,14','13,15'],a:1},
+{q:'What is the pattern? 2, 4, 6, 8, 10 …..',opts:['Add 1','Add 2','Multiply by 2','Add 3'],a:1},
+{q:'Which letter comes next? A, C, E, G, ____, ____',opts:['H,I','I,K','J,L','K,M'],a:1},
+{q:'Which letter comes next? V, X, ____',opts:['Y','Z','A','W'],a:1}
+]},
+{title:'Level 2 - Medium',questions:[
+{q:'What is the pattern? 1, 2, 5, 16, 64….',opts:['Add 3','Multiply by increasing numbers and add 1','Square numbers','Add previous two'],a:1},
+{q:'Which numbers come next? 1, 4, 10, 20, ___, ___',opts:['30,40','35,56','40,60','36,55'],a:1},
+{q:'Which letter comes next? A, E, H, L, ___',opts:['O','P','Q','R'],a:1},
+{q:'What is the pattern? A,D,G,J ….',opts:['Skip 1 letter','Skip 2 letters','Skip 3 letters','Reverse alphabet'],a:1},
+{q:'What are the next colours in this pattern? Red, Yellow, Green, Blue, Orange, ____, ____',opts:['Pink, Brown','Indigo, Violet','Black, White','Silver, Gold'],a:1}
+]},
+{title:'Level 3 - Hard',questions:[
+{q:'Which number comes next in this pattern? 1, 2, 5, 16, 64….',opts:['128','256','321','325'],a:2},
+{q:'What letter comes next in this pattern? A,G,N,___',opts:['T','U','V','W'],a:3},
+{q:'What pattern can you see in this triangle?',img:true,opts:['Prime numbers','Each number is sum of two above','Multiples of 2','Squares'],a:1},
+{q:'What letters come next? AB, FG, KL, PQ ___, ___',opts:['UV, ZA','ST, XY','WX, BC','QR, UV'],a:0},
+{q:'What comes next? 1, 5, 15, 35, ___, ____',opts:['45,55','60,90','70,126','75,140'],a:2}
+]}
 ];
 
-let level=0,qIndex=0,player=0,bot1=0,bot2=0,time=900,interval,gameOver=false;
-function shuffle(a){return a.sort(()=>Math.random()-.5)}
-function startGame(){levels.forEach(l=>shuffle(l));startTimer();showQ();}
+let levelIndex=0,qIndex=0,timeLeft=900,timer;
 
-function startTimer(){clearInterval(interval);time=900;interval=setInterval(()=>{
- if(gameOver) return;
- time--;timer.innerText=Math.floor(time/60)+':'+(time%60).toString().padStart(2,'0');
- botsMove(); if(time<=0) lose();
-},1000)}
+function shuffle(arr){return arr.sort(()=>Math.random()-0.5)}
 
-function botsMove(){bot1+=Math.random()*1.5;bot2+=Math.random()*1.4;updateBars(); if(bot1>=100||bot2>=100)lose();}
-function updateBars(){playerBar.style.width=player+'%';bot1Bar.style.width=bot1+'%';bot2Bar.style.width=bot2+'%';}
+function startGame(){levelIndex=0;document.getElementById('playAgain').classList.add('hidden');levels.forEach(l=>shuffle(l.questions));startLevel();}
 
-function showQ(){levelDiv.innerText='Level '+(level+1);let q=levels[level][qIndex];question.innerText=q.q;options.innerHTML='';q.o.forEach((opt,i)=>{let b=document.createElement('button');b.innerText=opt;b.onclick=()=>answer(i);options.appendChild(b);});}
+function startLevel(){qIndex=0;timeLeft=900;document.getElementById('levelTitle').innerText=levels[levelIndex].title;timer=setInterval(updateTimer,1000);showQuestion();}
 
-const canvas=document.getElementById('confettiCanvas');const ctx=canvas.getContext('2d');canvas.width=innerWidth;canvas.height=innerHeight;let pieces=[];
-function createConfetti(){for(let i=0;i<150;i++)pieces.push({x:Math.random()*canvas.width,y:-20,vy:2+Math.random()*3,size:5+Math.random()*5});}
-function drawConfetti(){ctx.clearRect(0,0,canvas.width,canvas.height);pieces.forEach(p=>{ctx.fillStyle=`hsl(${Math.random()*360},100%,60%)`;ctx.fillRect(p.x,p.y,p.size,p.size);p.y+=p.vy;});pieces=pieces.filter(p=>p.y<canvas.height);}setInterval(drawConfetti,30);
+function updateTimer(){timeLeft--;document.getElementById('timer').innerText='Time: '+Math.floor(timeLeft/60)+':'+(timeLeft%60).toString().padStart(2,'0');if(timeLeft<=0)gameOver();}
 
-function answer(i){if(gameOver)return;let q=levels[level][qIndex]; if(i!==q.a){lose();return;} createConfetti(); player+=100/(levels[level].length*3); qIndex++; if(qIndex>=levels[level].length){level++; qIndex=0; if(level>=3){win(); return;} startTimer();} showQ(); updateBars();}
+function showQuestion(){const q=levels[levelIndex].questions[qIndex];let html='<h2>'+q.q+'</h2>';
+if(q.img) html+="<img src='https://upload.wikimedia.org/wikipedia/commons/0/0d/PascalTriangleAnimated2.gif' width='250'><br>";
+q.opts.forEach((opt,i)=>{html+=`<button onclick='answer(${i})'>${opt}</button><br>`});
+document.getElementById('quiz').innerHTML=html;}
 
-function lose(){gameOver=true;clearInterval(interval);options.innerHTML='';end.innerHTML='<div class=skull>💀</div><button class=bigBtn onclick=location.reload()>Play Again</button>';}
-function win(){gameOver=true;clearInterval(interval);options.innerHTML='';end.innerHTML='<h1>You Win!</h1><button class=bigBtn onclick=location.reload()>Play Again</button>';}
+function answer(i){const q=levels[levelIndex].questions[qIndex];if(i!==q.a){gameOver();return;}qIndex++;if(qIndex>=levels[levelIndex].questions.length){levelIndex++;clearInterval(timer);if(levelIndex>=levels.length){winGame();}else startLevel();}else showQuestion();}
+
+function gameOver(){clearInterval(timer);document.getElementById('quiz').innerHTML='<h1>Game Over</h1>';document.getElementById('playAgain').classList.remove('hidden');}
+function winGame(){document.getElementById('quiz').innerHTML='<h1>You are the Pattern Champion!</h1>';document.getElementById('playAgain').classList.remove('hidden');}
 
 startGame();
 </script>
